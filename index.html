@@ -106,6 +106,21 @@
         <button id="submit-rating" style="background-color: #28a745; color: white; padding: 8px; border-radius: 5px; border: none; cursor: pointer; width: 100%;">إرسال التقييم</button>
     </div>
 </div>
+<!-- أداة فتح في Google Maps -->
+    <div id="google-maps-tool">
+        <button id="google-maps-button" style="background-color: #007bff; color: white; padding: 10px; border-radius: 5px; border: none; cursor: pointer; width: 200px; font-size: 16px;">
+            🌍 فتح في Google Maps
+        </button>
+        <div id="google-maps-container" style="display: none; margin-top: 10px; background-color: white; color: black; padding: 10px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.5); font-size: 14px; width: 200px;">
+            <p>اختر الموقع لفتح Google Maps</p>
+        </div>
+    </div>
+</div>
+<div id="dark-mode-tool" style="position: absolute; top: 10px; right: 10px; z-index: 1000;">
+    <button id="dark-mode-button" style="background-color: #007bff; color: white; padding: 10px; border-radius: 50%; border: none; cursor: pointer; font-size: 24px;">
+        🌞
+    </button>
+</div>
 
     <script>
         var map = L.map('map').setView([31.9, 35.2], 12);
@@ -229,11 +244,11 @@
 
                     var icon = L.divIcon({
                         className: '',
-                        html: `<div style="font-size: 24px; text-align: center;">${name.includes("مركز") ? '🩺' : '🏥'}</div>`
+                        html: <div style="font-size: 24px; text-align: center;">${name.includes("مركز") ? '🩺' : '🏥'}</div>
                     });
 
                     var marker = L.marker([coordinates[1], coordinates[0]], { icon: icon }).addTo(markers);
-                    marker.bindPopup(`<b>${name}</b><br>المدينة: ${city}`);
+                    marker.bindPopup(<b>${name}</b><br>المدينة: ${city});
 
                     marker.on('click', function () {
                         const sectionsContainer = document.getElementById('info-sections');
@@ -256,7 +271,7 @@
                         sections.forEach(section => {
                             const sectionDiv = document.createElement('div');
                             sectionDiv.classList.add('info-section');
-                            sectionDiv.innerHTML = `${section.title} <span>▼</span>`;
+                            sectionDiv.innerHTML = ${section.title} <span>▼</span>;
 
                             const contentDiv = document.createElement('div');
                             contentDiv.classList.add('info-section-content');
@@ -428,10 +443,77 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        alert(`شكرًا لتقييمك! تم تسجيل تقييمك بـ ${selectedRating} نجوم.`);
+        alert(شكرًا لتقييمك! تم تسجيل تقييمك بـ ${selectedRating} نجوم.);
         ratingContainer.style.display = 'none';
         selectedRating = 0;
         stars.forEach(star => (star.style.color = '#ccc'));
+    });
+});
+   document.addEventListener('DOMContentLoaded', () => {
+    const googleMapsButton = document.getElementById('google-maps-button');
+    const googleMapsContainer = document.getElementById('google-maps-container');
+
+    // فتح/إغلاق أداة Google Maps
+    googleMapsButton.addEventListener('click', () => {
+        googleMapsContainer.style.display =
+            googleMapsContainer.style.display === 'none' || googleMapsContainer.style.display === ''
+                ? 'block'
+                : 'none';
+    });
+
+    // إنشاء العلامات وإضافة رابط Google Maps
+    fetch('HealthFacititi_FeaturesToJSO.geojson')
+        .then(response => response.json())
+        .then(data => {
+            const markers = L.layerGroup().addTo(map);
+
+            data.features.forEach(feature => {
+                const name = feature.properties.BUSNIESS_N || "غير معروف";
+                const coordinates = feature.geometry.coordinates;
+
+                const marker = L.marker([coordinates[1], coordinates[0]]).addTo(markers);
+
+                const googleMapsLink = https://www.google.com/maps/dir/?api=1&destination=${coordinates[1]},${coordinates[0]}&travelmode=driving;
+
+                marker.bindPopup(`
+                    <b>${name}</b><br>
+                    <a href="${googleMapsLink}" target="_blank" style="color: blue; text-decoration: underline;">
+                        افتح في Google Maps
+                    </a>
+                `);
+
+                // إضافة حدث النقر لتفعيل الرابط
+                marker.on('click', () => {
+                    googleMapsContainer.innerHTML = `
+                        <p>تم تحديد الموقع:</p>
+                        <a href="${googleMapsLink}" target="_blank" style="color: blue; text-decoration: underline;">
+                            اضغط هنا لفتح Google Maps
+                        </a>
+                    `;
+                });
+            });
+        })
+        .catch(error => console.error('Error loading GeoJSON:', error));
+});
+   document.addEventListener('DOMContentLoaded', () => {
+    const darkModeButton = document.getElementById('dark-mode-button');
+    const mapElement = document.getElementById('map');
+    let isDarkMode = false;
+
+    // تغيير الوضع عند النقر على الزر
+    darkModeButton.addEventListener('click', () => {
+        if (!isDarkMode) {
+            // تفعيل الوضع الليلي
+            mapElement.style.filter = 'invert(1) hue-rotate(180deg)';
+            document.body.style.backgroundColor = 'black';
+            darkModeButton.textContent = '🌙'; // تغيير الأيقونة إلى قمر
+        } else {
+            // العودة للوضع العادي
+            mapElement.style.filter = 'none';
+            document.body.style.backgroundColor = 'white';
+            darkModeButton.textContent = '🌞'; // تغيير الأيقونة إلى شمس
+        }
+        isDarkMode = !isDarkMode; // تبديل الوضع
     });
 });
     </script>
